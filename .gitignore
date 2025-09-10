@@ -1,0 +1,56 @@
+# =========================
+# Node & dependencies
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# =========================
+# Build output
+# =========================
+dist/
+build/
+*.tsbuildinfo
+
+# =========================
+# Environment
+# =========================
+.env
+.env.local
+.env.*.local
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+*.log.*
+
+# =========================
+# WhatsApp-web.js Sessions
+# =========================
+# Directorio donde se guarda la sesión (según tu implementación)
+session/
+sessions/
+.whatsapp-web.js-cache/
+*.data.json
+
+# =========================
+# Docker
+# =========================
+/docker-compose.override.yml
+/.docker/
+/.dockerignore
+*.pid
+
+# =========================
+# Editor / IDE
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
