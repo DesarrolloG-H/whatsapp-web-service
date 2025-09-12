@@ -66,8 +66,6 @@ export const sendMessageHandler = async (req: Request, res: Response) => {
 
     // Verificar el destino
     const destination = groupId ? `${groupId}@g.us` : `${number}@c.us`;
-    console.log('Enviando mensaje a:', destination); // Log de depuración
-    console.log('Contenido del mensaje:', message); // Log de depuración
 
     // Enviar mensaje de texto
     if (type === 'text') {

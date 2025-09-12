@@ -18,9 +18,6 @@ export const sendMessage = async (
   if (mentions.length > 0) {
     messageOptions.mentions = mentions.map(m => `${m}@c.us`);
   }
-
-  console.log("Enviando a:", chatId);
-  console.log("Options:", messageOptions);
-
+  
   await client.sendMessage(chatId, message, messageOptions);
 };

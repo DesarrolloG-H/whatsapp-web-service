@@ -6,7 +6,7 @@ const app = express();
 const port = 3000;
 
 // Middleware para parsear JSON
-app.use(express.json({ limit: '10mb' }));  // Permite que las solicitudes grandes sean procesadas
+app.use(express.json({ limit: '50mb' }));
 
 app.use(sendRoutes);
 
