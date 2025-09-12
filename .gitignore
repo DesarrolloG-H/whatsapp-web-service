@@ -35,6 +35,7 @@ logs/
 session/
 sessions/
 .whatsapp-web.js-cache/
+.wwebjs_cache/
 *.data.json
 
 # =========================
