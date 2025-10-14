@@ -1,6 +1,6 @@
 // services/sendImageMessage.ts
 import { MessageMedia } from 'whatsapp-web.js';
-import { sendMessage } from './messageService';
+import { sendMessage } from './sender.services';
 
 export const sendImageMessage = async (number: string, base64: string, mentions: string[] = [], caption?: string) => {
   const mimeType = 'image/jpeg';  // Asumimos que es siempre una imagen JPEG

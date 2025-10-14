@@ -1,6 +1,5 @@
-// routes/sendRoutes.ts
 import { Router } from 'express';
-import { sendMessageHandler, getGroupsDetails } from '../controllers/sendController';  // Controlador para obtener ID de grupo
+import { sendMessageHandler, getGroupsDetails } from '../controllers/sender.controller';  // Controlador para obtener ID de grupo
 
 const router = Router();
 

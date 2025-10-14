@@ -1,4 +1,4 @@
-import { client } from './whatsappService';
+import { client } from '../../../core/whatsappClient';
 import { MessageMedia } from 'whatsapp-web.js';
 
 export const sendMessage = async (

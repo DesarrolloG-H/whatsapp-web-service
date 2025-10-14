@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { sendTextMessage } from '../services/sendTextMessage';
 import { sendImageMessage } from '../services/sendImageMessage';
 import { sendFileMessage } from '../services/sendFileMessage';
-import { client } from '../services/whatsappService';
+import { client } from '../../../core/whatsappClient';
 
 // Función para obtener detalles de los grupos
 export const getGroupsDetails = async (req: Request, res: Response) => {
