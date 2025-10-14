@@ -3,5 +3,5 @@ import { getHealthStatus } from '../services/health.service'
 
 export const healthCheckController = (req: Request, res: Response) => {
   const status = getHealthStatus()
-  res.json(status)
+  res.status(200).json(status)
 }
