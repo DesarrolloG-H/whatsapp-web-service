@@ -1,21 +1,28 @@
-# Usamos una imagen de Node.js
-FROM node:16
+# Etapa 1: Compilación
+FROM node:20-alpine AS builder
 
-# Establecemos el directorio de trabajo
 WORKDIR /app
 
-# Copiamos los archivos de la aplicación
+# Copiar dependencias e instalarlas
 COPY package*.json ./
 RUN npm install
 
-# Copiamos el resto de los archivos
+# Copiar código fuente
 COPY . .
 
-# Compilamos TypeScript
-RUN npm run build
+# Compilar TypeScript
+RUN npx tsc
 
-# Exponemos el puerto 3000
+# Etapa de ejecución (ajustada para desarrollo)
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install  # incluye devDependencies
+
+COPY . .
+
 EXPOSE 3000
 
-# Ejecutamos el servidor
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

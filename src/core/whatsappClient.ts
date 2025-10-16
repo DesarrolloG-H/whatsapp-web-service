@@ -6,7 +6,7 @@ import {
   clearSession,
   checkExistingSession,
 } from './sessionManager'
-// import { registerListeners } from '../modules/listener/services/listener.service'
+import { registerListeners } from '../modules/listener/services/listener.service'
 
 initSessionDirectory() //Crea carpeta si no existe
 
@@ -15,7 +15,8 @@ export const client = new Client({
     clientId: 'hitss',
     dataPath: path.join(process.cwd(), 'session'),
   }),
-  puppeteer: { headless: true },
+  puppeteer: {   headless: false,
+  args: ['--no-sandbox', '--disable-setuid-sandbox'], },
 })
 
 // EVENTOS
@@ -26,7 +27,7 @@ client.on('qr', (qr) => {
 
 client.on('ready', () => {
   console.log('Cliente WhatsApp listo y autenticado.')
-  // registerListeners(client)
+  registerListeners(client)
 })
 
 client.on('auth_failure', (msg) => {
