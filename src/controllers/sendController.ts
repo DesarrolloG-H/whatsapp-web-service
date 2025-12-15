@@ -3,71 +3,68 @@ import { Request, Response } from 'express';
 import { sendTextMessage } from '../services/sendTextMessage';
 import { sendImageMessage } from '../services/sendImageMessage';
 import { sendFileMessage } from '../services/sendFileMessage';
-import { client } from '../services/whatsappService';
+import { getClient, isClientReady } from '../services/whatsappService';
 
 // Función para obtener detalles de los grupos
 export const getGroupsDetails = async (req: Request, res: Response) => {
   try {
-    // Verificar que el cliente esté listo
-    if (!client.info || !client.info.wid) {
-      return res.status(500).json({
+    if (!isClientReady()) {
+      return res.status(503).json({
         status: 'error',
-        message: 'Cliente de WhatsApp aún no listo',
+        message: 'WhatsApp aún no está listo',
       });
     }
 
-    // Obtener todos los chats
+    const client = getClient();
+    if (!client) {
+      throw new Error('Cliente no inicializado');
+    }
+
+    // Delay obligatorio en Windows
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
     const chats = await client.getChats();
+    const groupChats = chats.filter(chat => chat.isGroup);
 
-    // Filtrar solo los chats que son grupos
-    const groupChats = chats.filter(chat => chat.isGroup);  // Filtrar chats de tipo "grupo"
-
-    if (groupChats.length > 0) {
-      // Devolver detalles de los grupos encontrados
-      const groupDetails = groupChats.map(chat => ({
-        groupId: chat.id._serialized,  // ID del grupo en el formato <group-id>@g.us
-        groupName: chat.name,  // Nombre del grupo
-        isGroup: chat.isGroup,
-      }));
-
-      return res.status(200).json({
-        status: 'success',
-        message: 'Detalles de los grupos obtenidos correctamente',
-        groupDetails,  // Lista de grupos con sus detalles
-      });
-    } else {
-      return res.status(400).json({
-        status: 'error',
-        message: 'No se encontraron grupos en tu cuenta de WhatsApp',
-      });
-    }
+    return res.status(200).json({
+      status: 'success',
+      groupDetails: groupChats.map(chat => ({
+        groupId: chat.id._serialized,
+        groupName: chat.name,
+      })),
+    });
   } catch (error: any) {
-    console.error('Error obteniendo detalles de los grupos:', error);
+    console.error('Error obteniendo grupos:', error);
     return res.status(500).json({
       status: 'error',
-      message: `Error al obtener detalles de los grupos: ${error.message}`,
+      message: error.message,
     });
   }
 };
 
 // Lógica para enviar mensajes a contactos o grupos
 export const sendMessageHandler = async (req: Request, res: Response) => {
-  const { number, groupId, message, type, base64, caption, filename,mentions } = req.body;
+  const { number, groupId, message, type, base64, caption, filename, mentions } = req.body;
 
   try {
-    // Verificar que el cliente esté listo
-    if (!client.info || !client.info.wid) {
-      console.log('Cliente no listo:', client.info);
-      return res.status(500).json({
+    // Validación correcta y consistente
+    if (!isClientReady()) {
+      return res.status(503).json({
         status: 'error',
-        message: 'Cliente de WhatsApp aún no listo',
+        message: 'WhatsApp aún no está listo',
       });
     }
 
-    // Verificar el destino
-    const destination = groupId ? `${groupId}@g.us` : `${number}@c.us`;
+    const client = getClient();
+    if (!client) {
+      throw new Error('Cliente no inicializado');
+    }
 
-    // Enviar mensaje de texto
+    const destination = groupId
+      ? `${groupId}@g.us`
+      : `${number}@c.us`;
+
+    // TEXTO
     if (type === 'text') {
       await sendTextMessage(destination, message, mentions);
       return res.status(200).json({
@@ -76,43 +73,51 @@ export const sendMessageHandler = async (req: Request, res: Response) => {
       });
     }
 
-    // Enviar imagen (Base64)
+    // IMAGEN
     if (type === 'image' && base64) {
-      const cleanBase64 = base64.split(',')[1]; // Limpiar Base64
+      const cleanBase64 = base64.split(',')[1];
       if (!cleanBase64) {
         return res.status(400).json({
           status: 'error',
-          message: 'Base64 no válido o incompleto',
+          message: 'Base64 no válido',
         });
       }
-      await sendImageMessage(destination, cleanBase64,mentions, caption);
+
+      await sendImageMessage(destination, cleanBase64, mentions, caption);
       return res.status(200).json({
         status: 'success',
         message: 'Imagen enviada correctamente',
       });
     }
 
-    // Enviar archivo (PDF, CSV, Excel, etc.)
+    // ARCHIVO
     if (type === 'file' && base64) {
-      const cleanBase64 = base64.split(',')[1]; // Limpiar Base64
+      const cleanBase64 = base64.split(',')[1];
       if (!cleanBase64) {
         return res.status(400).json({
           status: 'error',
-          message: 'Base64 no válido o incompleto',
+          message: 'Base64 no válido',
         });
       }
 
-      let mimeType = base64.split(';')[0].split(':')[1];  // Detectar tipo MIME
+      let mimeType = base64.split(';')[0].split(':')[1];
 
-      // Asegurarnos de que el tipo MIME es correcto para CSV, PDF, etc.
-      if (mimeType === '@file/csv') {
-        mimeType = 'text/csv';
-      } else if (mimeType === '@file/pdf') {
-        mimeType = 'application/pdf';
-      }
+      if (mimeType === '@file/csv') mimeType = 'text/csv';
+      if (mimeType === '@file/pdf') mimeType = 'application/pdf';
 
-      const fileName = filename || (mimeType === 'text/csv' ? 'file.csv' : 'file.pdf');
-      await sendFileMessage(destination, cleanBase64, mimeType, fileName, mentions, caption);
+      const fileName =
+        filename ||
+        (mimeType === 'text/csv' ? 'file.csv' : 'file.pdf');
+
+      await sendFileMessage(
+        destination,
+        cleanBase64,
+        mimeType,
+        fileName,
+        mentions,
+        caption
+      );
+
       return res.status(200).json({
         status: 'success',
         message: 'Archivo enviado correctamente',
@@ -121,13 +126,13 @@ export const sendMessageHandler = async (req: Request, res: Response) => {
 
     return res.status(400).json({
       status: 'error',
-      message: 'Tipo de mensaje no válido o falta Base64',
+      message: 'Tipo de mensaje no válido',
     });
   } catch (error: any) {
     console.error('Error enviando mensaje:', error);
     return res.status(500).json({
       status: 'error',
-      message: `Error al enviar el mensaje: ${error.message}`,
+      message: error.message,
     });
   }
 };
